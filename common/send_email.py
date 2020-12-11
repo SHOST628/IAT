@@ -11,7 +11,7 @@ import glob
 
 localReadConfig = read_config.ReadConfig()
 
-class Email:
+class Email():
     def __init__(self):
         global host, user, password, port, sender, title, content
         host = localReadConfig.get_email("mail_host")

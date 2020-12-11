@@ -32,3 +32,7 @@ class ReadConfig:
     def get_db(self, name):
         value = self.cf.get("DATABASE", name)
         return value
+
+    def get_report_path(self, name):
+        value = self.cf.get("REPORT", name)
+        return value

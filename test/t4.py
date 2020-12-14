@@ -1,26 +1,56 @@
-from queue import Queue
-from concurrent.futures import ThreadPoolExecutor, wait, as_completed, FIRST_COMPLETED
+# coding=utf-8
 import threading
-q = Queue()
-for item in range(1000):
-    q.put(item)
-    if item == 999:
-        q.put(None)
+import time
 
+con = threading.Condition()
 
-def get_data(q):
-    res = q.get()
-    print(res)
-    return res
+num = 0
 
+# 生产者
+class Producer(threading.Thread):
 
-with ThreadPoolExecutor(3) as executor:
-    # with threading.Condition() as con:
-    all_task = [executor.submit(get_data, q) for i in range(1001)]
-    wait(all_task,return_when=FIRST_COMPLETED)
-    tasks = as_completed(all_task)
-    for task in tasks:
-        if task is None:
-            break
+    def __init__(self):
+        threading.Thread.__init__(self)
 
+    def run(self):
+        # 锁定线程
+        global num
+        con.acquire()
+        while True:
+            print("开始添加！！！")
+            num += 1
+            print("火锅里面鱼丸个数：%s" % str(num))
+            time.sleep(1)
+            if num >= 5:
+                print("火锅里面里面鱼丸数量已经到达5个，无法添加了！")
+                # 唤醒等待的线程
+                con.notify()  # 唤醒小伙伴开吃啦
+                # 等待通知
+                con.wait()
+        # 释放锁
+        con.release()
 
+# 消费者
+class Consumers(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+
+    def run(self):
+        con.acquire()
+        global num
+        while True:
+            print("开始吃啦！！！")
+            num -= 1
+            print("火锅里面剩余鱼丸数量：%s" %str(num))
+            time.sleep(2)
+            if num <= 0:
+                print("锅底没货了，赶紧加鱼丸吧！")
+                con.notify()  # 唤醒其它线程
+                # 等待通知
+                con.wait()
+        con.release()
+
+p = Producer()
+c = Consumers()
+p.start()
+c.start()

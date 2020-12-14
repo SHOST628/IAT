@@ -15,16 +15,18 @@ def read_queue(queue):
     res = queue.get()
     if res is not None:
         print("current thread {} get: {}".format(threading.current_thread().name, res))
-    return res
+        return 0
+    else:
+        return None
 
 
-def writer(queue, condition):
+def writer(queue, condition, nloop):
     with condition:
-        for i in range(20000):
+        for i in range(nloop):
             write_queue(queue, i)
             condition.notify()
             condition.wait()
-            if i == 19999:
+            if i == nloop-1:
                 queue.put(None)
                 condition.notify()
 
@@ -47,7 +49,7 @@ def run_case():
     # email.send_email()
     data_queue = Queue()
     condition = threading.Condition()
-    th_writer = threading.Thread(target=writer, args=(data_queue, condition))
+    th_writer = threading.Thread(target=writer, args=(data_queue, condition, 100))
     th_reader = threading.Thread(target=reader, args=(data_queue, read_queue, condition))
     th_reader.start()
     th_writer.start()

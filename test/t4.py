@@ -1,56 +1,33 @@
-# coding=utf-8
-import threading
-import time
+import xlrd
+import xlwt
 
-con = threading.Condition()
 
-num = 0
+class DataProcess:
+    def __init__(self, excel_name, sheet_name):
+        self.workbook = xlrd.open_workbook(excel_name)
+        self.sheet_name = sheet_name
 
-# 生产者
-class Producer(threading.Thread):
+    def _gen_dict(self, key_list, value_list):
+        return dict(zip(key_list, value_list))
 
-    def __init__(self):
-        threading.Thread.__init__(self)
+    def get_row_dict(self, value_row, key_row=0):
+        sheet = self.workbook.sheet_by_name(self.sheet_name)
+        header = sheet.row_values(key_row)
+        detail = sheet.row_values(value_row)
+        hd_dict = self._gen_dict(header, detail)
+        return hd_dict
 
-    def run(self):
-        # 锁定线程
-        global num
-        con.acquire()
-        while True:
-            print("开始添加！！！")
-            num += 1
-            print("火锅里面鱼丸个数：%s" % str(num))
-            time.sleep(1)
-            if num >= 5:
-                print("火锅里面里面鱼丸数量已经到达5个，无法添加了！")
-                # 唤醒等待的线程
-                con.notify()  # 唤醒小伙伴开吃啦
-                # 等待通知
-                con.wait()
-        # 释放锁
-        con.release()
 
-# 消费者
-class Consumers(threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self)
+# data = xlrd.open_workbook("../testcase/testcase.xlsx")
+# sheet_name = data.sheet_names()
+# sheet0 = data.sheet_by_index(1)
+# row_zero = sheet0.row_values(0)
+# row_one = sheet0.row_values(1)
+# print(gen_dict(row_zero,row_one))
+data = DataProcess("../testcase/testcase.xlsx", "REQUESTD")
+data.get_row_dict(1)
 
-    def run(self):
-        con.acquire()
-        global num
-        while True:
-            print("开始吃啦！！！")
-            num -= 1
-            print("火锅里面剩余鱼丸数量：%s" %str(num))
-            time.sleep(2)
-            if num <= 0:
-                print("锅底没货了，赶紧加鱼丸吧！")
-                con.notify()  # 唤醒其它线程
-                # 等待通知
-                con.wait()
-        con.release()
 
-p = Producer()
-c = Consumers()
-p.start()
-c.start()
+
+
+

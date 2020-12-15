@@ -1,6 +1,6 @@
 import pymysql
 from config import read_config
-from common.log import MyLog as Log
+from util.log import MyLog as Log
 
 localReadConfig = read_config.ReadConfig()
 

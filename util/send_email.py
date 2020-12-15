@@ -5,7 +5,7 @@ from email.mime.text import MIMEText
 from datetime import datetime
 import threading
 from config import read_config
-from common.log import MyLog
+from util.log import MyLog
 import zipfile
 import glob
 

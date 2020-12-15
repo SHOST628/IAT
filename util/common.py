@@ -1,8 +1,8 @@
 import os
 from xlrd import open_workbook
 from xml.etree import ElementTree as ElementTree
-from common.log import MyLog as Log
-from common import config_http
+from util.log import MyLog as Log
+from util import config_http
 
 localConfigHttp = config_http.ConfigHttp()
 log = Log.get_log()

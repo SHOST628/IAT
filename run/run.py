@@ -1,45 +1,55 @@
-import os,sys
-import random
-sys.path.append(os.path.dirname(__file__))
 from queue import Queue
 from concurrent.futures import ThreadPoolExecutor, wait, as_completed, FIRST_COMPLETED
+import os
+import sys
 import threading
+sys.path.append(os.path.dirname(__file__))
 
 
-def write_queue(queue, item):
-    queue.put(item)
-    print("put item: {}".format(item))
+class CaseCollection(threading.Thread):
+    def __init__(self, queue, nloop, condition):
+        super().__init__()
+        self.condition = condition
+        self.queue = queue
+        self.nloop = nloop
+
+    def write_queue(self, item):
+        self.queue.put(item)
+        print("put item: {}".format(item))
+
+    def run(self):
+        with self.condition:
+            for i in range(self.nloop):
+                self.write_queue(i)
+                self.condition.notify()
+                self.condition.wait()
+                if i == self.nloop - 1:
+                    self.queue.put(None)
+                    self.condition.notify()
 
 
-def read_queue(queue):
-    res = queue.get()
-    if res is not None:
-        print("current thread {} get: {}".format(threading.current_thread().name, res))
-        return 0
-    else:
-        return None
+class Execution(threading.Thread):
+    def __init__(self, queue, condition):
+        super().__init__()
+        self.queue = queue
+        self.condition = condition
 
+    def read_queue(self):
+        res = self.queue.get()
+        if res is not None:
+            print("current thread {} get: {}".format(threading.current_thread().name, res))
+            return 0
+        else:
+            return None
 
-def writer(queue, condition, nloop):
-    with condition:
-        for i in range(nloop):
-            write_queue(queue, i)
-            condition.notify()
-            condition.wait()
-            if i == nloop-1:
-                queue.put(None)
-                condition.notify()
-
-
-def reader(queue, read_queue, condition):
-    with ThreadPoolExecutor(3) as executor:
+    def run(self):
         while True:
-            with condition:
-                condition.wait()
-                task = executor.submit(read_queue, queue)
-                if task.result() is None:
+            with self.condition:
+                self.condition.wait()
+                res = self.read_queue()
+                if res is None:
                     break
-                condition.notify()
+                self.condition.notify()
 
 
 def run_case():
@@ -49,11 +59,11 @@ def run_case():
     # email.send_email()
     data_queue = Queue()
     condition = threading.Condition()
-    th_writer = threading.Thread(target=writer, args=(data_queue, condition, 100))
-    th_reader = threading.Thread(target=reader, args=(data_queue, read_queue, condition))
-    th_reader.start()
-    th_writer.start()
+    case_collection = CaseCollection(data_queue, 100, condition)
+    execution = Execution(data_queue, condition)
+    execution.start()
+    case_collection.start()
 
 
-if __name__ =="__main__":
+if __name__ == "__main__":
     run_case()

@@ -1,33 +1,18 @@
-import xlrd
-import xlwt
+import requests
+import json
 
 
-class DataProcess:
-    def __init__(self, excel_name, sheet_name):
-        self.workbook = xlrd.open_workbook(excel_name)
-        self.sheet_name = sheet_name
+payload = """{
+    "msg": ["静夜思"],
+    "b": 1
+}"""
 
-    def _gen_dict(self, key_list, value_list):
-        return dict(zip(key_list, value_list))
+headers = {"Content-Type": "application/json; charset=UTF-8"}
 
-    def get_row_dict(self, value_row, key_row=0):
-        sheet = self.workbook.sheet_by_name(self.sheet_name)
-        header = sheet.row_values(key_row)
-        detail = sheet.row_values(value_row)
-        hd_dict = self._gen_dict(header, detail)
-        return hd_dict
-
-
-# data = xlrd.open_workbook("../testcase/testcase.xlsx")
-# sheet_name = data.sheet_names()
-# sheet0 = data.sheet_by_index(1)
-# row_zero = sheet0.row_values(0)
-# row_one = sheet0.row_values(1)
-# print(gen_dict(row_zero,row_one))
-data = DataProcess("../testcase/testcase.xlsx", "REQUESTD")
-data.get_row_dict(1)
-
-
-
-
-
+# result = requests.post("https://api.apiopen.top/getJoke", data=json.dumps(payload), verify=False)
+# result = requests.get("https://api.apiopen.top/getJoke?page=1&count=2&type=video", verify=False)
+result = requests.get("http://api.wpbom.com/api/ancien.php?msg=[静夜思]&b=1")
+# result = requests.post("http://api.wpbom.com/api/ancien.php", data=payload, headers=headers)
+#
+#
+print(result.text)

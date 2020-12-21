@@ -6,8 +6,8 @@ class DataProcess:
     """
     get a row data from excel
     """
-    def __init__(self, excel_name, sheet_name):
-        self.workbook = xlrd.open_workbook(excel_name)
+    def __init__(self, workbook, sheet_name):
+        self.workbook = workbook
         self.sheet_name = sheet_name
 
     def _gen_dict(self, key_list, value_list):
@@ -31,8 +31,7 @@ class MergeProcess:
     """
     merge header and detail into queue
     """
-    def __init__(self, excel_name, sheet_header_name):
-        workbook = xlrd.open_workbook(excel_name)
+    def __init__(self, workbook, sheet_header_name):
         self.sheet = workbook.sheet_by_name(sheet_header_name)
         indexs = range(1, self.sheet.nrows)
         self.api_names = self.sheet.col_values(1)
@@ -65,12 +64,14 @@ class DataCollection:
 
 
 excel_name = "../testcase/testcase.xlsx"
+workbook = xlrd.open_workbook(excel_name)
 sheet_header_name = "REQUESTH"
 sheet_detail_name = "REQUESTD"
-dataprocess = DataProcess(excel_name, sheet_detail_name)
+dataprocess = DataProcess(workbook, sheet_detail_name)
 row_one = dataprocess.get_row_dict(1)
-mergeprocess = MergeProcess(excel_name, sheet_header_name)
+mergeprocess = MergeProcess(workbook, sheet_header_name)
 queue = mergeprocess.merge_requesth_d(row_one)
+print(queue)
 request = SendRequest()
 res = request.get(queue)
-print(res.text)
+# print(res.text)
